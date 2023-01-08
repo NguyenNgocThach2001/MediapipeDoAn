@@ -24,8 +24,6 @@ class PoseDetector:
 
     def get_pointCoordinate(self, img):
         image_hight, image_width, image_color = img.shape
-        if(self.results.pose_landmarks.landmark is None):
-            return -1
         x_coodinate = self.results.pose_landmarks.landmark[self.mpPose.PoseLandmark.LEFT_PINKY].x * image_width
         y_coodinate = self.results.pose_landmarks.landmark[self.mpPose.PoseLandmark.LEFT_PINKY].y * image_hight
         left_pinky = [x_coodinate,y_coodinate]
