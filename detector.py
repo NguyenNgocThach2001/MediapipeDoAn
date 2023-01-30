@@ -1,6 +1,7 @@
 import cv2
 import time
-
+import os
+from cv2 import addWeighted
 import numpy
 import pose_estimation_class as pm
 import random
@@ -14,12 +15,24 @@ TIME_TO_ADD_GLOWING_LIGHT_SUM = 0
 GLOWING_LIGHT_TIME_COUNT = 0
 TURN_ON_OFF_LIGHT = 1
 ANIMATION_INDEX = 0
+LIGHTNING_SIZE = 150
+LIGHTNING_ALPHA = 1
 NUMBER_OF_ANIMATION = 4
 detector = pm.PoseDetector()
 
 vid = cv2.VideoCapture(0)
 
+def load_images_from_folder(folder,size):
+    images = []
+    for filename in os.listdir(folder):
+        img = cv2.imread(os.path.join(folder,filename))
+        if img is not None:
+            img = cv2.resize(img, (size, size))
+            images.append(img)
+    return images
+
 sword = cv2.imread("sword-removebg.png")
+lightnings = load_images_from_folder("lightning", LIGHTNING_SIZE)
 
 ratio = sword.shape[1] / sword.shape[0]
 sword = cv2.resize(sword, (int(100*ratio), int(100)))
@@ -29,11 +42,28 @@ cv2.imshow("sword.jpg", sword)
 
 hand_light_queue = []
 
+
+
+    
 def add_glowing_light_point_to_queue(x, y, radius, time):
     hand_light_queue.append([x,y,radius, time])
 
 start = time.time()
 previous_frame = start
+lightning_index = -1
+
+def draw_lighining(number_of_lightning, result):
+    for i in range(number_of_lightning):
+        num = int(random.randrange(len(lightnings))) - 1
+        num1 = int(random.randrange(250))
+        num2 = int(random.randrange(450))
+        color_random = int(random.randrange(255))
+        lightning = lightnings[num]
+        img2gray = cv2.cvtColor(lightning, cv2.COLOR_BGR2GRAY)
+        ret, mask = cv2.threshold(img2gray, 180, 255, cv2.THRESH_BINARY)
+        roi = result[num1 : num1 + LIGHTNING_SIZE , num2 : num2 + LIGHTNING_SIZE ]
+        roi[numpy.where(mask > 0.01)] = lightning[numpy.where(mask  > 0.01)] 
+
 while(True):
     ret, frame = vid.read()
     img, results = detector.findPose(frame, True)
@@ -134,6 +164,7 @@ while(True):
             hand_light_queue = [item for item in hand_light_queue if item[3] > 0]
             result = result_with_sword
         
+        draw_lighining(10, result)
 
 
         cv2.imshow("Sword Hand Position", sword)
